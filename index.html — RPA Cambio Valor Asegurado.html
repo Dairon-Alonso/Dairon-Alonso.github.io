@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RPA · Cambio Valor Asegurado</title>
+  <style>
+    :root {
+      --bol-verde: #00953B;
+      --bol-verde-osc: #00702C;
+      --bol-amarillo: #FFD100;
+      --bol-gris: #58595B;
+      --bol-gris-claro: #F4F6F5;
+      --exito-bg: #E6F5EC;
+      --error-bg: #FDECEC;
+      --error-txt: #B3261E;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bol-gris-claro);
+      color: var(--bol-gris);
+    }
+
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: #FFFFFF;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .card__header {
+      background: var(--bol-verde);
+      padding: 28px 28px 24px;
+      border-bottom: 5px solid var(--bol-amarillo);
+    }
+
+    .card__eyebrow {
+      margin: 0 0 6px;
+      font-size: 12px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--bol-amarillo);
+      font-weight: 700;
+    }
+
+    .card__title {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.3;
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+
+    .card__body { padding: 28px; }
+
+    .card__text {
+      margin: 0 0 22px;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px 20px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--bol-verde);
+      color: #FFFFFF;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+
+    .btn:hover:not(:disabled) { background: var(--bol-verde-osc); }
+    .btn:active:not(:disabled) { transform: translateY(1px); }
+    .btn:focus-visible { outline: 3px solid var(--bol-amarillo); outline-offset: 2px; }
+    .btn:disabled { opacity: 0.65; cursor: progress; }
+
+    .msg {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.55;
+      border-left: 5px solid transparent;
+      display: none;
+      word-break: break-word;
+    }
+
+    .msg--ok {
+      display: block;
+      background: var(--exito-bg);
+      border-left-color: var(--bol-verde);
+      color: var(--bol-verde-osc);
+    }
+
+    .msg--error {
+      display: block;
+      background: var(--error-bg);
+      border-left-color: var(--error-txt);
+      color: var(--error-txt);
+    }
+
+    .msg--info {
+      display: block;
+      background: #FFF8DB;
+      border-left-color: var(--bol-amarillo);
+      color: #7A5A00;
+    }
+
+    .msg pre {
+      margin: 8px 0 0;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow: auto;
+    }
+
+    .footer {
+      padding: 16px 28px 22px;
+      font-size: 12px;
+      color: #8A8C8E;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <header class="card__header">
+      <p class="card__eyebrow">Seguros Bolívar · Automatización</p>
+      <h1 class="card__title">RPA Cambio Valor Asegurado</h1>
+    </header>
+
+    <div class="card__body">
+      <p class="card__text">
+        Al presionar el botón se enviará la solicitud de ejecución al flujo de N8N
+        encargado del proceso de <strong>Cambio de Valor Asegurado</strong>.
+      </p>
+
+      <button id="btnEjecutar" class="btn" type="button">Ejecutar RPA</button>
+
+      <div id="mensaje" class="msg" role="status" aria-live="polite"></div>
+    </div>
+
+    <p class="footer">Uso interno · Dirección de Ingeniería de Software</p>
+  </main>
+
+  <script>
+    const WEBHOOK_URL = "https://n8n-automatizacion-dev.bolnet.com.co/webhook/SoftEngineering/Automation/V1/CambioValorAsegura";
+
+    const boton = document.getElementById("btnEjecutar");
+    const mensaje = document.getElementById("mensaje");
+
+    function mostrarMensaje(tipo, titulo, detalle) {
+      mensaje.className = "msg msg--" + tipo;
+      mensaje.innerHTML = "<strong>" + titulo + "</strong>" +
+        (detalle ? "<pre>" + detalle.replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c])) + "</pre>" : "");
+    }
+
+    boton.addEventListener("click", async () => {
+      boton.disabled = true;
+      boton.textContent = "Ejecutando...";
+      mostrarMensaje("info", "Enviando solicitud al servidor...", "");
+
+      const payload = {
+        proceso: "CambioValorAsegurado",
+        origen: "GitHub Pages",
+        solicitadoPor: "usuario-web",
+        fechaSolicitud: new Date().toISOString()
+      };
+
+      try {
+        const respuesta = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const texto = await respuesta.text();
+
+        if (respuesta.ok) {
+          mostrarMensaje(
+            "ok",
+            "✔ RPA ejecutado correctamente (HTTP " + respuesta.status + ")",
+            texto || "El servidor no devolvió contenido."
+          );
+        } else {
+          mostrarMensaje(
+            "error",
+            "✖ El servidor respondió con error (HTTP " + respuesta.status + ")",
+            texto || respuesta.statusText
+          );
+        }
+      } catch (error) {
+        mostrarMensaje(
+          "error",
+          "✖ No se pudo conectar con el webhook",
+          error.message + "\n\nPosibles causas: el webhook no permite CORS desde este dominio, " +
+          "la red interna (bolnet) no es accesible desde internet, o el flujo de N8N está inactivo."
+        );
+      } finally {
+        boton.disabled = false;
+        boton.textContent = "Ejecutar RPA";
+      }
+    });
+  </script>
+</body>
+</html>
