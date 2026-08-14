@@ -161,7 +161,7 @@
   </main>
 
   <script>
-    const WEBHOOK_URL = "https://n8n-automatizacion.bolnet.com.co/webhook/SoftEngineering/Automation/V1/CambioValorAsegura";
+    const WEBHOOK_URL = "https://n8n-automatizacion-dev.bolnet.com.co/webhook/SoftEngineering/Automation/V1/CambioValorAsegurado";
 
     const boton = document.getElementById("btnEjecutar");
     const mensaje = document.getElementById("mensaje");
@@ -177,18 +177,9 @@
       boton.textContent = "Ejecutando...";
       mostrarMensaje("info", "Enviando solicitud al servidor...", "");
 
-      const payload = {
-        proceso: "CambioValorAsegurado",
-        origen: "GitHub Pages",
-        solicitadoPor: "usuario-web",
-        fechaSolicitud: new Date().toISOString()
-      };
-
       try {
         const respuesta = await fetch(WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          method: "GET"
         });
 
         const texto = await respuesta.text();
@@ -210,8 +201,7 @@
         mostrarMensaje(
           "error",
           "✖ No se pudo conectar con el webhook",
-          error.message + "\n\nPosibles causas: el webhook no permite CORS desde este dominio, " +
-          "la red interna (bolnet) no es accesible desde internet, o el flujo de N8N está inactivo."
+          error.message
         );
       } finally {
         boton.disabled = false;
